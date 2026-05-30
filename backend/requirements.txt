@@ -1,0 +1,13 @@
+flask
+flask-cors
+pymongo
+PyPDF2
+python-docx
+spacy
+nltk
+scikit-learn
+pandas
+PyJWT
+flask-bcrypt
+python-dotenv
+Werkzeug
