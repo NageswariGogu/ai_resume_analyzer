@@ -10,6 +10,7 @@ def create_app():
     
     CORS(app, origins=[
         "http://localhost:5173",
+        "https://sssresumeanalyzer.netlify.app",
         "https://ssairesumeanalyzer.netlify.app"
     ])
     
