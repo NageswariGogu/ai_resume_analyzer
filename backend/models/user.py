@@ -7,37 +7,47 @@ from bson import ObjectId
 class UserModel:
     def __init__(self, db):
         self.db = db
-        self.collection = db.users if db else None
+        self.collection = db.users if db is not None else None
         self.mock_file = "users_db.json"
-        if not db and not os.path.exists(self.mock_file):
+        if db is None and not os.path.exists(self.mock_file):
             with open(self.mock_file, "w") as f:
                 json.dump([], f)
 
     def create_user(self, name, email, password):
-        hashed_password = generate_password_hash(password).decode('utf-8')
-        user = {
-            "name": name,
-            "email": email,
-            "password": hashed_password,
-            "createdAt": datetime.datetime.utcnow().isoformat()
-        }
-        
-        if self.collection is not None:
-            try:
-                if self.collection.find_one({"email": email}):
-                    return None
-                return self.collection.insert_one(user)
-            except Exception:
-                pass # Fallback to mock
-
-        # Mock implementation
-        users = self._read_mock()
-        if any(u['email'] == email for u in users):
-            return None
-        user['_id'] = str(ObjectId())
-        users.append(user)
-        self._write_mock(users)
-        return type('obj', (object,), {'inserted_id': user['_id']})
+        try:
+            hashed_password = generate_password_hash(password).decode('utf-8')
+            user = {
+                "name": name,
+                "email": email,
+                "password": hashed_password,
+                "createdAt": datetime.datetime.utcnow().isoformat()
+            }
+            
+            # Try MongoDB first
+            if self.collection is not None:
+                try:
+                    if self.collection.find_one({"email": email}):
+                        return None
+                    result = self.collection.insert_one(user)
+                    return result
+                except Exception as e:
+                    print(f"MongoDB insert failed: {e}. Falling back to mock.")
+            
+            # Mock implementation
+            users = self._read_mock()
+            if any(u['email'] == email for u in users):
+                return None
+            user['_id'] = str(ObjectId())
+            users.append(user)
+            self._write_mock(users)
+            
+            # Return an object with inserted_id attribute for compatibility
+            class MockResult:
+                def __init__(self, id): self.inserted_id = id
+            return MockResult(user['_id'])
+        except Exception as e:
+            print(f"Error in create_user: {e}")
+            raise e
 
     def find_by_email(self, email):
         if self.collection is not None:

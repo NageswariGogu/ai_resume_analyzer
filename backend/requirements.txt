@@ -11,3 +11,4 @@ PyJWT
 flask-bcrypt
 python-dotenv
 Werkzeug
+dnspython

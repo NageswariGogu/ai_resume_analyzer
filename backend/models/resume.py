@@ -6,9 +6,9 @@ from bson import ObjectId
 class ResumeModel:
     def __init__(self, db):
         self.db = db
-        self.collection = db.resumes if db else None
+        self.collection = db.resumes if db is not None else None
         self.mock_file = "resumes_db.json"
-        if not db and not os.path.exists(self.mock_file):
+        if db is None and not os.path.exists(self.mock_file):
             with open(self.mock_file, "w") as f:
                 json.dump([], f)
 
